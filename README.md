@@ -1,4 +1,4 @@
-![](https://raw.githubusercontent.com/wdbm/megaparsex/master/megaparsex.png)
+![](https://raw.githubusercontent.com/wdbm/megaparsex/master/media/megaparsex.png)
 
 # credits
 
