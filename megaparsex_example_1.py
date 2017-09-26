@@ -39,7 +39,7 @@ import sys
 import megaparsex
 
 name    = "megaparsex_example_1"
-version = "2017-09-22T1419Z"
+version = "2017-09-26T1724Z"
 
 def main():
 
@@ -54,6 +54,8 @@ def main():
         "how are you",
         "ip address",
         "restart",
+        "run command",
+        "rain EGPF"
         #"reverse SSH"
         ]:
 
@@ -86,6 +88,19 @@ def main():
             else:
 
                 print(response.feedback())
+
+        elif type(response) is megaparsex.command:
+
+            output = response.engage_command(
+                command    = megaparsex.get_input(
+                    prompt = response.prompt() + " "
+                ),
+                background = False
+            )
+
+            if output:
+
+                print("output:\n{output}".format(output = output))
 
         else:
 

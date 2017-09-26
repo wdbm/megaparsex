@@ -41,8 +41,10 @@ import subprocess
 import sys
 import time
 
+import AWRS
+
 name    = "megaparsex"
-version = "2017-09-22T1419Z"
+version = "2017-09-26T1724Z"
 
 def trigger_keyphrases(
     text                          = None,  # input text to parse
@@ -152,12 +154,43 @@ def parse(
                          "ip address"
                          ],
             response   = report_IP()
+        ),
+        trigger_keyphrases(
+            text       = text,
+            keyphrases = [
+                         "METAR"
+                         ],
+            response   = report_METAR(text = text)
+        ),
+        trigger_keyphrases(
+            text       = text,
+            keyphrases = [
+                         "TAF"
+                         ],
+            response   = report_TAF(text = text)
+        ),
+        trigger_keyphrases(
+            text       = text,
+            keyphrases = [
+                         "rain"
+                         ],
+            response   = report_rain_times(text = text)
         )
     ])
 
     # actions
 
     triggers.extend([
+        trigger_keyphrases(
+            text       = text,
+            keyphrases = [
+                         "command",
+                         "run command",
+                         "engage command",
+                         "execute command"
+                         ],
+            response   = command()
+        ),
         trigger_keyphrases(
             text                          = text,
             keyphrases                    = [
@@ -366,6 +399,54 @@ class confirmation(
             kwargs   = kwargs
         )
 
+class command(
+    object
+    ):
+
+    """
+    A command object contains the ability to request an input that is to be run
+    as a command, and contains a prompt. When it receives the command, it runs
+    the command.
+    """
+
+    def __init__(
+        self,
+        prompt     = "input command:",
+        command    = None,
+        background = True
+        ):
+
+        self._prompt     = prompt
+        self._command    = command
+        self._background = background
+
+    def prompt(
+        self
+        ):
+
+        return self._prompt
+
+    def engage_command(
+        self,
+        command    = None,
+        background = None
+        ):
+
+        if not command:
+
+            command    = self._command,
+
+        if not background:
+
+            background = self._background
+
+        output = engage_command(
+            command    = command,
+            background = background
+        )
+
+        return output
+
 def get_input(
     prompt = None
     ):
@@ -438,6 +519,87 @@ def report_IP(
         pass
 
     return "IP address: unknown"
+
+def report_METAR(
+    text = None
+    ):
+
+    words = text.split()
+
+    try:
+
+        identifier = words[words.index("METAR") + 1]
+
+    except:
+
+        identifier = None
+
+    if not identifier:
+
+        report = AWRS.METAR()
+
+    else:
+
+        report = AWRS.METAR(identifier = identifier)
+
+    return "METAR: " + report["METAR"]
+
+def report_TAF(
+    text = None
+    ):
+
+    words = text.split()
+
+    try:
+
+        identifier = words[words.index("TAF") + 1]
+
+    except:
+
+        identifier = None
+
+    if not identifier:
+
+        report = AWRS.TAF()
+
+    else:
+
+        report = AWRS.TAF(identifier = identifier)
+
+    return "TAF:" + report["TAF"]
+
+def report_rain_times(
+    text = None
+    ):
+
+    words = text.split()
+
+    try:
+
+        identifier = words[words.index("rain") + 1]
+
+        response = AWRS.rain_human_readable_datetimes(
+            identifier    = identifier,
+            return_list   = False,
+            return_string = True
+        )
+
+    except:
+
+        identifier = None
+
+        response = AWRS.rain_human_readable_datetimes(
+            return_list   = False,
+            return_string = True
+        )
+
+    if not response:
+
+        return "no rain forcast"
+
+    else:
+
+        return "rain forecast times: " + response
 
 def restart():
 
