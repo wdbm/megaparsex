@@ -14,6 +14,12 @@ Some associated utilities are functions for manual input, to run system commands
 
 See example code for basic usage information.
 
+# setup
+
+```Bash
+sudo pip install megaparsex
+```
+
 # coding ideas
 
 The multiparse function can combine a number of predefined or custom parser functions. Simple interactions involve responding to a single text input with text or by running a function. More complex interactions involve responding to a single text input but with a confirmation object which is used to ask for a confirmation before proceeding with defined actions. Still more complex interactions could involve nested parsers, whereby a parser or set of parsers is used to extract a response and that response can be used to propagate to nested parsers.
