@@ -10,7 +10,7 @@
 
 It features a confirmation class that contains the ability to check responses for confirmation or denial while containing a function with optional keyword arguments to run on detection of confirmation together with optional specialized prompts and responses to confirmation and denial. It features a command class that contains the ability to request an input that is to be run as a command and to run that command, and contains a prompt.
 
-Some associated utilities are functions for manual input, to run system commands, to report IP information, to report weather information and to restart a script.
+Some associated utilities are functions for manual input, to run system commands, to report IP information, to report weather information, to report system status, and to restart a script.
 
 See example code for basic usage information.
 

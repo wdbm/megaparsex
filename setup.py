@@ -9,7 +9,7 @@ def main():
 
     setuptools.setup(
         name             = "megaparsex",
-        version          = "2017.09.26.1724",
+        version          = "2017.10.02.2150",
         description      = "parsing and associated utilities",
         long_description = long_description(),
         url              = "https://github.com/wdbm/megaparsex",
@@ -17,11 +17,12 @@ def main():
         author_email     = "wbm@protonmail.ch",
         license          = "GPLv3",
         py_modules       = [
-                           "AWRS",
                            "megaparsex"
                            ],
         install_requires = [
+                           "AWRS",
                            "docopt",
+                           "psutil"
                            ],
         scripts          = [
                            "megaparsex.py"

@@ -39,7 +39,7 @@ import sys
 import megaparsex
 
 name    = "megaparsex_example_1"
-version = "2017-09-26T1724Z"
+version = "2017-10-02T2150Z"
 
 def main():
 
@@ -55,8 +55,8 @@ def main():
         "ip address",
         "restart",
         "run command",
-        "rain EGPF"
-        #"reverse SSH"
+        "rain EGPF",
+        "reverse SSH"
         ]:
 
         print("\nparse text: " + text + "\nWait 3 seconds, then parse.")
@@ -65,7 +65,7 @@ def main():
 
         response = megaparsex.multiparse(
             text         = text,
-            parsers      = [megaparsex.parse, parse_1],
+            parsers      = [megaparsex.parse, parse_networking],
             help_message = "Does not compute. I can report my IP address and I "
                            "can restart my script."
         )
@@ -106,7 +106,7 @@ def main():
 
             print(response)
 
-def parse_1(
+def parse_networking(
     text = None
     ):
 

@@ -42,9 +42,10 @@ import sys
 import time
 
 import AWRS
+import psutil
 
 name    = "megaparsex"
-version = "2017-09-26T1724Z"
+version = "2017-10-02T2150Z"
 
 def trigger_keyphrases(
     text                          = None,  # input text to parse
@@ -110,7 +111,7 @@ def parse(
 
     triggers = []
 
-    # humour
+    # general
 
     if humour >= 75:
 
@@ -133,11 +134,10 @@ def parse(
             trigger_keyphrases(
                 text       = text,
                 keyphrases = [
-                             "how are you",
-                             "are you well",
-                             "status"
+                             "thanks",
+                             "thank you"
                              ],
-                response   = "nae bad fam"
+                response   = "you're welcome, boo ;)"
             )
         ])
 
@@ -147,6 +147,7 @@ def parse(
         trigger_keyphrases(
             text       = text,
             keyphrases = [
+                         "where are you",
                          "IP",
                          "I.P.",
                          "IP address",
@@ -154,6 +155,15 @@ def parse(
                          "ip address"
                          ],
             response   = report_IP()
+        ),
+        trigger_keyphrases(
+            text       = text,
+            keyphrases = [
+                         "how are you",
+                         "are you well",
+                         "status"
+                         ],
+            response   = report_system_status(humour = humour)
         ),
         trigger_keyphrases(
             text       = text,
@@ -434,9 +444,9 @@ class command(
 
         if not command:
 
-            command    = self._command,
+            command = self._command,
 
-        if not background:
+        if background is None:
 
             background = self._background
 
@@ -464,12 +474,23 @@ def engage_command(
     background = True
     ):
 
-    if not background:
+    if background:
+
+        subprocess.Popen(
+            [command],
+            shell      = True,
+            executable = "/bin/bash"
+        )
+
+        return None
+
+    elif not background:
 
         process = subprocess.Popen(
             [command],
             shell      = True,
-            executable = "/bin/bash"
+            executable = "/bin/bash",
+            stdout     = subprocess.PIPE
         )
         process.wait()
         output, errors = process.communicate()
@@ -477,12 +498,6 @@ def engage_command(
         return output
 
     else:
-
-        subprocess.Popen(
-            [command],
-            shell      = True,
-            executable = "/bin/bash"
-        )
 
         return None
 
@@ -536,13 +551,31 @@ def report_METAR(
 
     if not identifier:
 
-        report = AWRS.METAR()
+        try:
+
+            report = AWRS.METAR()
+
+        except:
+
+            report = None
 
     else:
 
-        report = AWRS.METAR(identifier = identifier)
+        try:
 
-    return "METAR: " + report["METAR"]
+            report = AWRS.METAR(identifier = identifier)
+
+        except:
+
+            report = None
+
+    if not report:
+
+        return "METAR: unknown"
+
+    else:
+
+        return "METAR: " + report["METAR"]
 
 def report_TAF(
     text = None
@@ -560,13 +593,31 @@ def report_TAF(
 
     if not identifier:
 
-        report = AWRS.TAF()
+        try:
+
+            report = AWRS.TAF()
+
+        except:
+
+            report = None
 
     else:
 
-        report = AWRS.TAF(identifier = identifier)
+        try:
 
-    return "TAF:" + report["TAF"]
+            report = AWRS.TAF(identifier = identifier)
+
+        except:
+
+            report = None
+
+    if not report:
+
+        return "TAF: unknown"
+
+    else:
+
+        return "TAF:" + report["TAF"]
 
 def report_rain_times(
     text = None
@@ -578,20 +629,32 @@ def report_rain_times(
 
         identifier = words[words.index("rain") + 1]
 
-        response = AWRS.rain_human_readable_datetimes(
-            identifier    = identifier,
-            return_list   = False,
-            return_string = True
-        )
+        try:
+
+            response = AWRS.rain_human_readable_datetimes(
+                identifier    = identifier,
+                return_list   = False,
+                return_string = True
+            )
+
+        except:
+
+            return "rain forecast: unknown"
 
     except:
 
         identifier = None
 
-        response = AWRS.rain_human_readable_datetimes(
-            return_list   = False,
-            return_string = True
-        )
+        try:
+
+            response = AWRS.rain_human_readable_datetimes(
+                return_list   = False,
+                return_string = True
+            )
+
+        except:
+
+            return "rain forecast: unknown"
 
     if not response:
 
@@ -600,6 +663,34 @@ def report_rain_times(
     else:
 
         return "rain forecast times: " + response
+
+def report_system_status(
+    humour = 75
+    ):
+
+    CPU           = psutil.cpu_percent(interval = 1)
+    system_memory = psutil.virtual_memory().percent
+    drive         = psutil.disk_usage("/").percent
+
+    report = "CPU: {CPU} %\n"\
+             "system memory: {system_memory} %\n"\
+             "drive: {drive} %".format(
+        CPU           = str(CPU),
+        system_memory = str(system_memory),
+        drive         = str(drive)
+    )
+
+    if humour >= 75:
+
+        if CPU > 90:
+
+            report = report + "\noot ma nut mate"
+
+        else:
+
+            report = report + "\nnae bad fam"
+
+    return report
 
 def restart():
 
