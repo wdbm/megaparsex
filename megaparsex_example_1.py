@@ -39,7 +39,7 @@ import sys
 import megaparsex
 
 name    = "megaparsex_example_1"
-version = "2017-10-02T2150Z"
+version = "2017-10-04T2347Z"
 
 def main():
 
@@ -65,7 +65,10 @@ def main():
 
         response = megaparsex.multiparse(
             text         = text,
-            parsers      = [megaparsex.parse, parse_networking],
+            parsers      = [
+                           megaparsex.parse,
+                           parse_networking
+                           ],
             help_message = "Does not compute. I can report my IP address and I "
                            "can restart my script."
         )

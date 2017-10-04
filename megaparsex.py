@@ -40,12 +40,16 @@ import requests
 import subprocess
 import sys
 import time
+if sys.version_info >= (3, 0):
+    import builtins as _builtins
+else:
+    import __builtin__ as _builtins
 
 import AWRS
 import psutil
 
 name    = "megaparsex"
-version = "2017-10-02T2150Z"
+version = "2017-10-04T2347Z"
 
 def trigger_keyphrases(
     text                          = None,  # input text to parse
@@ -215,7 +219,66 @@ def parse(
         )
     ])
 
-    if any([trigger for trigger in triggers if trigger is not False]):
+    if any(triggers):
+
+        responses = [response for response in triggers if response]
+
+        if len(responses) > 1:
+
+            return responses
+
+        else:
+
+            return responses[0]
+
+    else:
+
+        return False
+
+def parse_networking(
+    text    = None
+    ):
+
+    # Access address and port parameters via the builtins or __builtin__ module.
+    # Relish the nonsense.
+
+    try:
+
+        address = _builtins.address
+        port    = _builtins.port
+
+    except:
+
+        address = None
+        port    = None
+
+    command_reverse_SSH = "ssh -R " + port + ":localhost:22 " + address
+
+    triggers = []
+
+    if address and port:
+
+        triggers.extend([
+            trigger_keyphrases(
+                text                          = text,
+                keyphrases                    = [
+                                                "reverse SSH",
+                                                "reverse ssh"
+                                                ],
+                function                      = engage_command,
+                kwargs                        = {
+                                                "command": command_reverse_SSH
+                                                },
+                confirm                       = True,
+                confirmation_prompt           = "Do you want to reverse SSH "
+                                                "connect? (y/n)",
+                confirmation_feedback_confirm = "confirm reverse SSH connect: "
+                                                "ssh localhost -p " + port,
+                confirmation_feedback_deny    = "deny reverse SSH connect"
+            )
+        ])
+
+    if any(triggers):
 
         responses = [response for response in triggers if response]
 
