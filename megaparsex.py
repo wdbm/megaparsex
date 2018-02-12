@@ -33,13 +33,10 @@
 ################################################################################
 """
 
-import datetime
-import json
 import os
 import requests
 import subprocess
 import sys
-import time
 if sys.version_info >= (3, 0):
     import builtins as _builtins
 else:
@@ -49,7 +46,7 @@ import AWRS
 import psutil
 
 name    = "megaparsex"
-version = "2018-02-12T1709Z"
+version = "2018-02-12T2333Z"
 
 def trigger_keyphrases(
     text                          = None,  # input text to parse
@@ -166,6 +163,13 @@ def parse(
         trigger_keyphrases(
             text       = text,
             keyphrases = [
+                         "heartbeat"
+                         ],
+            function   = heartbeat_message
+        ),
+        trigger_keyphrases(
+            text       = text,
+            keyphrases = [
                          "METAR"
                          ],
             function   = report_METAR,
@@ -238,7 +242,6 @@ def parse_networking(
     except:
         address = None
         port    = None
-    command_reverse_SSH = "ssh -R " + port + ":localhost:22 " + address
     triggers = []
     if address and port:
         triggers.extend([
@@ -249,12 +252,12 @@ def parse_networking(
                                                 "reverse ssh"
                                                 ],
                 function                      = engage_command,
-                kwargs                        = {"command": command_reverse_SSH},
+                kwargs                        = {"command": "ssh -R " + str(port) + ":localhost:22 " + address},
                 confirm                       = True,
                 confirmation_prompt           = "Do you want to reverse SSH "
                                                 "connect? (y/n)",
                 confirmation_feedback_confirm = "confirm reverse SSH connect: "
-                                                "ssh localhost -p " + port,
+                                                "ssh localhost -p " + str(port),
                 confirmation_feedback_deny    = "deny reverse SSH connect"
             )
         ])
@@ -585,6 +588,16 @@ def report_system_status(
         return report
     except:
         return "unknown"
+
+def heartbeat_message(
+    humour = 75
+    ):
+    message                                   =\
+        "heartbeat\n\n"                       +\
+        report_IP()                           +\
+        "\n\n"                                +\
+        report_system_status(humour = humour)
+    return message
 
 def restart():
     import __main__

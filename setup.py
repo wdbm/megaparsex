@@ -9,7 +9,7 @@ def main():
 
     setuptools.setup(
         name             = "megaparsex",
-        version          = "2018.02.12.1709",
+        version          = "2018.02.12.2333",
         description      = "parsing and associated utilities",
         long_description = long_description(),
         url              = "https://github.com/wdbm/megaparsex",
