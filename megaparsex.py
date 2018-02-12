@@ -49,12 +49,12 @@ import AWRS
 import psutil
 
 name    = "megaparsex"
-version = "2017-10-04T2347Z"
+version = "2018-02-12T1709Z"
 
 def trigger_keyphrases(
     text                          = None,  # input text to parse
     keyphrases                    = None,  # keyphrases for parsing input text
-    response                      = True,  # optional text response on trigger
+    response                      = None,  # optional text response on trigger
     function                      = None,  # optional function on trigger
     kwargs                        = None,  # optional function keyword arguments
     confirm                       = False, # optional return of confirmation
@@ -62,7 +62,6 @@ def trigger_keyphrases(
     confirmation_feedback_confirm = "confirm",
     confirmation_feedback_deny    = "deny"
     ):
-
     """
     Parse input text for keyphrases. If any keyphrases are found, respond with
     text or by seeking confirmation or by engaging a function with optional
@@ -70,11 +69,8 @@ def trigger_keyphrases(
     triggered. If confirmation is required, a confirmation object is returned,
     encapsulating a function and its optional arguments.
     """
-
     if any(pattern in text for pattern in keyphrases):
-
         if confirm:
-
             return confirmation(
                 prompt           = confirmation_prompt,
                 feedback_confirm = confirmation_feedback_confirm,
@@ -82,26 +78,25 @@ def trigger_keyphrases(
                 function         = function,
                 kwargs           = kwargs
             )
-
         if function and not kwargs:
-
-            function()
-
-        if function and kwargs:
-
-            function(**kwargs)
-
-        return response
-
+            result = function()
+        elif function and kwargs:
+            result = function(**kwargs)
+        else:
+            result = None
+        if response:
+            return response
+        elif not response and result:
+            return str(result)
+        else:
+            return True
     else:
-
         return False
 
 def parse(
     text   = None,
     humour = 75
     ):
-
     """
     Parse input text using various triggers, some returning text and some for
     engaging functions. If triggered, a trigger returns text or True if and if
@@ -112,13 +107,11 @@ def parse(
 
     Options such as humour engage or disengage various triggers.
     """
-
     triggers = []
 
     # general
 
     if humour >= 75:
-
         triggers.extend([
             trigger_keyphrases(
                 text       = text,
@@ -158,7 +151,7 @@ def parse(
                          "I.P. address",
                          "ip address"
                          ],
-            response   = report_IP()
+            function   = report_IP
         ),
         trigger_keyphrases(
             text       = text,
@@ -167,28 +160,32 @@ def parse(
                          "are you well",
                          "status"
                          ],
-            response   = report_system_status(humour = humour)
+            function   = report_system_status,
+            kwargs     = {"humour": humour}
         ),
         trigger_keyphrases(
             text       = text,
             keyphrases = [
                          "METAR"
                          ],
-            response   = report_METAR(text = text)
+            function   = report_METAR,
+            kwargs     = {"text": text}
         ),
         trigger_keyphrases(
             text       = text,
             keyphrases = [
                          "TAF"
                          ],
-            response   = report_TAF(text = text)
+            response   = report_TAF,
+            kwargs     = {"text": text}
         ),
         trigger_keyphrases(
             text       = text,
             keyphrases = [
                          "rain"
                          ],
-            response   = report_rain_times(text = text)
+            response   = report_rain_times,
+            kwargs     = {"text": text}
         )
     ])
 
@@ -220,44 +217,30 @@ def parse(
     ])
 
     if any(triggers):
-
         responses = [response for response in triggers if response]
-
         if len(responses) > 1:
-
             return responses
-
         else:
-
             return responses[0]
-
     else:
-
         return False
 
 def parse_networking(
     text    = None
     ):
-
-    # Access address and port parameters via the builtins or __builtin__ module.
-    # Relish the nonsense.
-
+    """
+    Access address and port parameters via the builtins or __builtin__ module.
+    Relish the nonsense.
+    """
     try:
-
         address = _builtins.address
         port    = _builtins.port
-
     except:
-
         address = None
         port    = None
-
     command_reverse_SSH = "ssh -R " + port + ":localhost:22 " + address
-
     triggers = []
-
     if address and port:
-
         triggers.extend([
             trigger_keyphrases(
                 text                          = text,
@@ -266,9 +249,7 @@ def parse_networking(
                                                 "reverse ssh"
                                                 ],
                 function                      = engage_command,
-                kwargs                        = {
-                                                "command": command_reverse_SSH
-                                                },
+                kwargs                        = {"command": command_reverse_SSH},
                 confirm                       = True,
                 confirmation_prompt           = "Do you want to reverse SSH "
                                                 "connect? (y/n)",
@@ -277,21 +258,13 @@ def parse_networking(
                 confirmation_feedback_deny    = "deny reverse SSH connect"
             )
         ])
-
     if any(triggers):
-
         responses = [response for response in triggers if response]
-
         if len(responses) > 1:
-
             return responses
-
         else:
-
             return responses[0]
-
     else:
-
         return False
 
 def multiparse(
@@ -299,7 +272,6 @@ def multiparse(
     parsers      = [parse],
     help_message = None
     ):
-
     """
     Parse input text by looping over a list of multiple parsers. If one trigger
     is triggered, return the value returned by that trigger, if multiple
@@ -307,47 +279,30 @@ def multiparse(
     triggers. If no triggers are triggered, return False or an optional help
     message.
     """
-
     responses = []
-
     for _parser in parsers:
-
         response = _parser(text = text)
-
         if response is not False:
-
             responses.extend(response if response is list else [response])
-
     if not any(responses):
-
         if help_message:
-
             return help_message
-
         else:
-
             return False
-
     else:
-
         if len(responses) > 1:
-
             return responses
-
         else:
-
             return responses[0]
 
 class confirmation(
     object
     ):
-
     """
     A confirmation object contains the ability to detect a confirmation or a
     denial in input text, and contains a prompt, a function to run, with
     optional keyword arguments, and feedback on confirmation or denial.
     """
-
     def __init__(
         self,
         prompt           = "Do you want to continue? (y/n)",
@@ -356,41 +311,32 @@ class confirmation(
         function         = None,
         kwargs           = None
         ):
-
         self._prompt           = prompt
         self._feedback_confirm = feedback_confirm
         self._feedback_deny    = feedback_deny
         self._function         = function
         self._kwargs           = kwargs
-
         self._feedback         = None
         self._confirmed        = None
 
     def prompt(
         self
         ):
-
         return self._prompt
 
     def feedback(
         self
         ):
-
         if self._confirmed is True:
-
             self._feedback = self._feedback_confirm
-
         if self._confirmed is False:
-
             self._feedback = self._feedback_deny
-
         return self._feedback
 
     def test(
         self,
         text = None
         ):
-
         """
         Parse input text as a confirmation or denial. If a confirmation is
         detected, return True and set internal confirmed state to True and if a
@@ -399,74 +345,49 @@ class confirmation(
         denial is detected, return None and set internal confirmed state to
         None.
         """
-
         if text is None:
-
             self._confirmed = None
-
             return None
-
         else:
-
             if text.lower() in ["y"]:
-
                 self._confirmed = True
-
                 return True
-
             elif text.lower() in ["n"]:
-
                 self._confirmed = False
-
                 return False
-
             else:
-
                 self._confirmed = None
-
                 return None
 
     def confirmed(
         self
         ):
-
         """
         Return internal confirmation state.
         """
-
         return self._confirmed
 
     def run(
         self
         ):
-
         """
         Engage contained function with optional keyword arguments.
         """
-
         if self._function and not self._kwargs:
-
             return self._function()
-
         if self._function and self._kwargs:
-
             return self._function(**self._kwargs)
 
     def __str__(
         self
         ):
-
         if self._kwargs is not None:
-
             kwargs = self._kwargs
             kwargs = ", ".join(
                 [str(key) + "=" + str(kwargs[key]) for key in kwargs]
             )
-
         else:
-
             kwargs = ""
-
         return "confirmation: function: {function}({kwargs})".format(
             function = self._function.__name__,
             kwargs   = kwargs
@@ -475,20 +396,17 @@ class confirmation(
 class command(
     object
     ):
-
     """
     A command object contains the ability to request an input that is to be run
     as a command, and contains a prompt. When it receives the command, it runs
     the command.
     """
-
     def __init__(
         self,
         prompt     = "input command:",
         command    = None,
         background = True
         ):
-
         self._prompt     = prompt
         self._command    = command
         self._background = background
@@ -496,7 +414,6 @@ class command(
     def prompt(
         self
         ):
-
         return self._prompt
 
     def engage_command(
@@ -504,51 +421,36 @@ class command(
         command    = None,
         background = None
         ):
-
         if not command:
-
             command = self._command,
-
         if background is None:
-
             background = self._background
-
         output = engage_command(
             command    = command,
             background = background
         )
-
         return output
 
 def get_input(
     prompt = None
     ):
-
     if sys.version_info >= (3, 0):
-
         return input(prompt)
-
     else:
-
         return raw_input(prompt)
 
 def engage_command(
     command    = None,
     background = True
     ):
-
     if background:
-
         subprocess.Popen(
             [command],
             shell      = True,
             executable = "/bin/bash"
         )
-
         return None
-
     elif not background:
-
         process = subprocess.Popen(
             [command],
             shell      = True,
@@ -557,205 +459,133 @@ def engage_command(
         )
         process.wait()
         output, errors = process.communicate()
-
         return output
-
     else:
-
         return None
 
 def report_IP(
     country = True,
     IP_only = False
     ):
-
     IP = "unknown"
-
     try:
-
         data_IP_website = requests.get("http://ipinfo.io/json")
         data_IP         = data_IP_website.json()
         IP              = data_IP["ip"]
         country         = data_IP["country"]
-
         if IP_only:
-
             text = IP
-
         else:
-
             text = "IP address: " + IP
-
             if country:
-
                 text = text + " (" + country + ")"
-
         return text
-
     except:
-
-        pass
-
-    return "IP address: unknown"
+        return "IP address: unknown"
 
 def report_METAR(
     text = None
     ):
-
+    if not text:
+        return "no station specified"
     words = text.split()
-
     try:
-
         identifier = words[words.index("METAR") + 1]
-
     except:
-
         identifier = None
-
     if not identifier:
-
         try:
-
             report = AWRS.METAR()
-
         except:
-
             report = None
-
     else:
-
         try:
-
             report = AWRS.METAR(identifier = identifier)
-
         except:
-
             report = None
-
     if not report:
-
         return "METAR: unknown"
-
     else:
-
         return "METAR: " + report["METAR"]
 
 def report_TAF(
     text = None
     ):
-
+    if not text:
+        return "no station specified"
     words = text.split()
-
     try:
-
         identifier = words[words.index("TAF") + 1]
-
     except:
-
         identifier = None
-
     if not identifier:
-
         try:
-
             report = AWRS.TAF()
-
         except:
-
             report = None
-
     else:
-
         try:
-
             report = AWRS.TAF(identifier = identifier)
-
         except:
-
             report = None
-
     if not report:
-
         return "TAF: unknown"
-
     else:
-
         return "TAF:" + report["TAF"]
 
 def report_rain_times(
     text = None
     ):
-
+    if not text:
+        return "no station specified"
     words = text.split()
-
     try:
-
         identifier = words[words.index("rain") + 1]
-
         try:
-
             response = AWRS.rain_human_readable_datetimes(
                 identifier    = identifier,
                 return_list   = False,
                 return_string = True
             )
-
         except:
-
             return "rain forecast: unknown"
-
     except:
-
         identifier = None
-
         try:
-
             response = AWRS.rain_human_readable_datetimes(
                 return_list   = False,
                 return_string = True
             )
-
         except:
-
             return "rain forecast: unknown"
-
     if not response:
-
         return "no rain forcast"
-
     else:
-
         return "rain forecast times: " + response
 
 def report_system_status(
     humour = 75
     ):
-
-    CPU           = psutil.cpu_percent(interval = 1)
-    system_memory = psutil.virtual_memory().percent
-    drive         = psutil.disk_usage("/").percent
-
-    report = "CPU: {CPU} %\n"\
-             "system memory: {system_memory} %\n"\
-             "drive: {drive} %".format(
-        CPU           = str(CPU),
-        system_memory = str(system_memory),
-        drive         = str(drive)
-    )
-
-    if humour >= 75:
-
-        if CPU > 90:
-
-            report = report + "\noot ma nut mate"
-
-        else:
-
-            report = report + "\nnae bad fam"
-
-    return report
+    try:
+        CPU           = psutil.cpu_percent(interval = 1)
+        system_memory = psutil.virtual_memory().percent
+        drive         = psutil.disk_usage("/").percent
+        report = "CPU: {CPU} %\n"\
+                 "system memory: {system_memory} %\n"\
+                 "drive: {drive} %".format(
+            CPU           = str(CPU),
+            system_memory = str(system_memory),
+            drive         = str(drive)
+        )
+        if humour >= 75:
+            if CPU > 90:
+                report = report + "\noot ma nut mate"
+            else:
+                report = report + "\nnae bad fam"
+        return report
+    except:
+        return "unknown"
 
 def restart():
-
     import __main__
     os.execv(__main__.__file__, sys.argv)

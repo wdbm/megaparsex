@@ -39,17 +39,15 @@ import sys
 import megaparsex
 
 name    = "megaparsex_example_1"
-version = "2017-10-04T2347Z"
+version = "2018-02-12T1546Z"
 
 def main():
-
     """
     Loop over a list of input text strings. Parse each string using a list of
     parsers, one included in megaparsex and one defined in this script. If a
     confirmation is requested, seek confirmation, otherwise display any response
     text and engage any triggered functions.
     """
-
     for text in [
         "how are you",
         "ip address",
@@ -58,11 +56,8 @@ def main():
         "rain EGPF",
         "reverse SSH"
         ]:
-
         print("\nparse text: " + text + "\nWait 3 seconds, then parse.")
-
         time.sleep(3)
-
         response = megaparsex.multiparse(
             text         = text,
             parsers      = [
@@ -72,49 +67,34 @@ def main():
             help_message = "Does not compute. I can report my IP address and I "
                            "can restart my script."
         )
-
         if type(response) is megaparsex.confirmation:
-
             while response.confirmed() is None:
-
                 response.test(
                     text = megaparsex.get_input(
                         prompt = response.prompt() + " "
                     )
                 )
-
             if response.confirmed():
-
                 print(response.feedback())
                 response.run()
-
             else:
-
                 print(response.feedback())
-
         elif type(response) is megaparsex.command:
-
             output = response.engage_command(
                 command    = megaparsex.get_input(
                     prompt = response.prompt() + " "
                 ),
                 background = False
             )
-
             if output:
-
                 print("output:\n{output}".format(output = output))
-
         else:
-
             print(response)
 
 def parse_networking(
     text = None
     ):
-
     triggers = []
-
     triggers.extend([
         megaparsex.trigger_keyphrases(
             text                          = text,
@@ -131,21 +111,13 @@ def parse_networking(
             confirmation_feedback_deny    = "deny reverse SSH connect"
         )
     ])
-
     if any(triggers):
-
         responses = [response for response in triggers if response]
-
         if len(responses) > 1:
-
             return responses
-
         else:
-
             return responses[0]
-
     else:
-
         return False
 
 if __name__ == "__main__":

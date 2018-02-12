@@ -9,7 +9,7 @@ def main():
 
     setuptools.setup(
         name             = "megaparsex",
-        version          = "2017.10.04.2347",
+        version          = "2018.02.12.1709",
         description      = "parsing and associated utilities",
         long_description = long_description(),
         url              = "https://github.com/wdbm/megaparsex",
@@ -23,9 +23,6 @@ def main():
                            "AWRS",
                            "docopt",
                            "psutil"
-                           ],
-        scripts          = [
-                           "megaparsex.py"
                            ],
         entry_points     = """
                            [console_scripts]
